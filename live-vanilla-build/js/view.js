@@ -25,6 +25,7 @@ export class View {
 
   bindGameResetEvent(handler) {
     this.$.resetBtn.addEventListener("click", handler);
+    this.$.modalBtn.addEventListener("click", handler);
   }
 
   bindNewRoundEvent(handler) {
@@ -33,11 +34,41 @@ export class View {
 
   bindPlayerMoveEvent(handler) {
     this.$$.squares.forEach((square) => {
-      square.addEventListener("click", handler);
+      square.addEventListener("click", () => handler(square));
     });
   }
 
   //DOM helper methods
+  openModal(message) {
+    this.$.modal.classList.remove("hidden");
+    this.$.modalText.innerText = message;
+  }
+
+  #closeModal() {
+    this.$.modal.classList.add("hidden");
+  }
+
+  closeAll() {
+    this.#closeModal();
+    this.#closeMenu();
+  }
+
+  clearMoves() {
+    this.$$.squares.forEach((square) => {
+      square.replaceChildren();
+    });
+  }
+
+  #closeMenu() {
+    this.$.menuItems.classList.add("hidden");
+    this.$.menuBtn.classList.remove("border");
+
+    const icon = this.$.menuBtn.querySelector("i");
+
+    icon.classList.add("fa-chevron-down");
+    icon.classList.remove("fa-chevron-up");
+  }
+
   #toggleMenu() {
     this.$.menuItems.classList.toggle("hidden");
     this.$.menuBtn.classList.toggle("border");
@@ -50,11 +81,7 @@ export class View {
 
   handlePlayerMove(squareEl, player) {
     const icon = document.createElement("i");
-    icon.classList.add(
-      "fa-solid",
-      player === 1 ? "fa-x" : "fa-o",
-      player === 1 ? "yellow" : "turquoise"
-    );
+    icon.classList.add("fa-solid", player.iconClass, player.colorClass);
     squareEl.replaceChildren(icon);
   }
 
@@ -62,13 +89,10 @@ export class View {
     const icon = document.createElement("i");
     const label = document.createElement("p");
 
-    this.$.turn.classList.add(player === 1 ? "yellow" : "turquoise");
-    this.$.turn.classList.remove(player === 1 ? "turquoise" : "yellow");
+    icon.classList.add("fa-solid", player.colorClass, player.iconClass);
 
-    icon.classList.add("fa-solid", player === 1 ? "fa-x" : "fa-o");
-
-    label.innerText =
-      player === 1 ? "Player 1, you are up!" : "Player 2, you are up!";
+    label.classList.add(player.colorClass);
+    label.innerText = `${player.name}, you are up!`;
 
     this.$.turn.replaceChildren(icon, label);
   }
