@@ -121,7 +121,7 @@ export class Store extends EventTarget {
     let newState;
 
     switch (typeof stateOrFn) {
-      case " function":
+      case "function":
         newState = stateOrFn(prevState);
         break;
 
