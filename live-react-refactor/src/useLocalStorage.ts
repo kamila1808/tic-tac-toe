@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { Dispatch, SetStateAction, useCallback } from "react";
 import { useEffect, useState } from "react";
 
 /**
@@ -10,7 +10,10 @@ import { useEffect, useState } from "react";
  * @param initialValue initial value to load to localStorage
  * @returns localStorage value
  */
-export function useLocalStorage(key, initialValue) {
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T
+): [T, Dispatch<SetStateAction<T>>] {
   const [internalValue, setInternalValue] = useState(() => {
     try {
       const item = window.localStorage.getItem(key);
@@ -21,7 +24,7 @@ export function useLocalStorage(key, initialValue) {
     }
   });
 
-  const setValue = useCallback(
+  const setValue = useCallback<Dispatch<SetStateAction<T>>>(
     (value) => {
       try {
         const valueToStore =

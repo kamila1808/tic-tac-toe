@@ -1,13 +1,12 @@
-import { useState } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 import "./App.css";
 import Footer from "./components/Footer";
 import Menu from "./components/Menu";
 import Modal from "./components/Modal";
-import { GameState, Player } from "./types";
+import type { GameState, Player } from "./types";
 import classNames from "classnames";
 
-const players: Player[] = [
+export const players: Player[] = [
   {
     id: 1,
     name: "Player 1",
@@ -24,7 +23,6 @@ const players: Player[] = [
 
 function deriveGame(state: GameState) {
   const currentPlayer = players[state.currentGameMoves.length % 2];
-  const nextPlayer = players[(state.currentGameMoves.length + 1) % 2];
 
   const winningPatterns = [
     [1, 2, 3],
@@ -56,7 +54,7 @@ function deriveGame(state: GameState) {
     currentPlayer,
     status: {
       isComplete: winner != null || state.currentGameMoves.length === 9,
-      winner,
+      winner: winner as Player,
     },
   };
 }
@@ -78,44 +76,43 @@ function deriveStats(state: GameState) {
   };
 }
 
-const initialState = {
-  currentGameMoves: [],
-  history: {
-    currentRoundGames: [],
-    allGames: [],
-  },
-};
-
-export default function App() 
-  const [state, setState] = useLocalStorage('game-state-key', initialState)
+export default function App() {
+  const [state, setState] = useLocalStorage<GameState>("game-state-key", {
+    currentGameMoves: [],
+    history: {
+      currentRoundGames: [],
+      allGames: [],
+    },
+  });
 
   const game = deriveGame(state);
   const stats = deriveStats(state);
 
-  const resetGame = (isNewRound) => {
-    setState((prevState) => {
-      const stateCopy = structuredClone(prevState);
-      // If game is complete, archive it to history object
-      if (game.status.isComplete) {
-        const { moves, status } = game;
-        stateCopy.history.currentRoundGames.push({
+  function resetGame(isNewRound: boolean) {
+    setState((prev) => {
+      const stateClone = structuredClone(prev);
+
+      const { status, moves } = game;
+
+      if (status.isComplete) {
+        stateClone.history.currentRoundGames.push({
           moves,
           status,
         });
       }
 
-      stateCopy.currentGameMoves = [];
+      stateClone.currentGameMoves = [];
 
-      // Must archive current round in addition to resetting current game
       if (isNewRound) {
-        stateCopy.history.allGames.push(...stateCopy.history.currentRoundGames);
-        stateCopy.history.currentRoundGames = [];
+        stateClone.history.allGames.push(
+          ...stateClone.history.currentRoundGames
+        );
+        stateClone.history.currentRoundGames = [];
       }
 
-      return stateCopy;
+      return stateClone;
     });
-  };
-
+  }
 
   function handlePlayerMove(squareId: number, player: Player) {
     setState((prev) => {
@@ -181,7 +178,7 @@ export default function App()
             style={{ backgroundColor: "var(--light-gray)" }}
           >
             <p>Ties</p>
-            <span data-id="ties">0</span>
+            <span data-id="ties">{stats.ties}</span>
           </div>
           <div
             className="score shadow"
